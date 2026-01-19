@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
 import Sidebar from '../components/Sidebar/Sidebar';
 import ChatBox from '../components/Chat/ChatBox';
@@ -8,7 +8,6 @@ const Home = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { selectedChat } = useChat();
-  const [showSidebar, setShowSidebar] = useState(!isMobile);
 
   return (
     <Box sx={{ 

@@ -82,37 +82,43 @@ export const ChatProvider = ({ children }) => {
         } catch (error) {
             console.error('Error fetching chats:', error);
         }
-    }, [user?.token]);
+    }, [user]);
 
-    const sendMessage = async (content, chatId, messageType = 'text', fileUrl = '') => {
-        try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${user.token}`,
-                },
-            };
+    const sendMessage = useCallback(
+        async (content, chatId, messageType = 'text', fileUrl = '') => {
+            try {
+                const config = {
+                    headers: {
+                        Authorization: `Bearer ${user.token}`,
+                    },
+                };
 
-            const { data } = await axios.post(
-                '/api/chat/message',
-                { content, chatId, messageType, fileUrl },
-                config
-            );
+                const { data } = await axios.post(
+                    '/api/chat/message',
+                    { content, chatId, messageType, fileUrl },
+                    config
+                );
 
-            socket.emit('send-message', {
-                ...data,
-                receiverId: selectedChat.users.find(u => u._id !== user._id)?._id
-            });
+                if (socket && selectedChat) {
+                    socket.emit('send-message', {
+                        ...data,
+                        receiverId: selectedChat.users.find(u => u._id !== user._id)?._id,
+                    });
+                }
 
-            setMessages([...messages, data]);
+                setMessages(prevMessages => [...prevMessages, data]);
 
-            // Update latest message in chat
-            setChats(chats.map(chat =>
-                chat._id === chatId ? { ...chat, latestMessage: data } : chat
-            ));
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-    };
+                setChats(prevChats =>
+                    prevChats.map(chat =>
+                        chat._id === chatId ? { ...chat, latestMessage: data } : chat
+                    )
+                );
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        },
+        [user, socket, selectedChat]
+    );
 
     const value = useMemo(() => ({
         user,
